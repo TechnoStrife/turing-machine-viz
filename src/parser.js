@@ -17,7 +17,7 @@ let TM = require('./TuringMachine'),
  * @param {?Object} details Optional details. Possible keys:
  *                          problemValue, state, key, synonym, info, suggestion
  */
-function TMSpecError(reason, details={}) {
+function TMSpecError(reason, details = {}) {
     this.name = 'TMSpecError'
     this.stack = (new Error()).stack
 
@@ -71,6 +71,7 @@ Object.defineProperty(TMSpecError.prototype, 'message', {
 })
 
 /** @typedef {{[key: string]: ?{[key: string]: string} }} TransitionTable */
+
 /**
  * @typedef {Object} TMSpec
  * @property {string} blank
@@ -265,6 +266,7 @@ function checkTarget(table, instruct) {
     }
     return instruct
 }
+
 /**
  * @typedef {{[tape: string]: string}} TapeDict
  */
@@ -281,6 +283,7 @@ function checkTarget(table, instruct) {
  * @property {?string} write
  */
 /** @typedef {STTMAction|MTTMAction} TMAction */
+
 /**
  * @typedef {{[key: string]: TMAction}} SynonymMap
  */
@@ -299,6 +302,9 @@ function parseInstruction(synonyms, table, val, tapes) {
             case 'string':
                 return parseInstructionString(synonyms, val, tapes)
             case 'object':
+                if (tapes) {
+                    throw new TMSpecError('Multitape TM only supports string instructions')
+                }
                 return parseInstructionObject(val)
             default:
                 throw new TMSpecError(
@@ -315,9 +321,6 @@ function parseInstruction(synonyms, table, val, tapes) {
     }())
 }
 
-const moveLeft = Object.freeze({move: TM.MoveHead.left})
-const moveRight = Object.freeze({move: TM.MoveHead.right})
-
 // case: direction or synonym
 /**
  *
@@ -332,25 +335,30 @@ function parseInstructionString(synonyms, val, tapes) {
             return synonyms[val]
         }
         let state = val.match(/^([a-zA-Z]\w+)?( |$)/)
-        let instruction = {state: null, move: {}, write: {}}
+        let move = Array(tapes).fill('H')
+        let write = Array(tapes)
         if (state != null) {
             val = val.slice(state[1].length).trim()
-            instruction.state = state[1]
+            state = state[1]
         }
+        let tape_numbers = []
         while (val !== '') {
-            let tape = val.match(/^(\d)([RL]?[^ ]?)( |$)/)
+            let tape = val.match(/^(\d)([RL]?)([^ ]?)( |$)/)
             if (tape === null) {
                 throw new TMSpecError(
                     'Unrecognized string',
                     {
                         problemValue: val,
                         info: 'An instruction can be a synonym or a state with instructions for'
-                            + ' tapes. Examples: <code>state2 1R 2R0</code>, <code>20 3R</code>',
+                            + ' tapes. Examples: <code>state2 1R 2R0</code>, <code>2Lx 3R</code>',
                     },
                 )
             }
             val = val.slice(tape[0].length).trimLeft()
             let tape_number = parseInt(tape[1])
+            if (tape_number === 0) {
+                throw new TMSpecError('Tape numbers start from 1', {problemValue: val})
+            }
             if (tape_number > tapes) {
                 throw new TMSpecError(
                     'Tape number is bigger than the number of tapes',
@@ -360,17 +368,25 @@ function parseInstructionString(synonyms, val, tapes) {
                     },
                 )
             }
+            tape_number -= 1
+            if (tape_numbers.includes(tape_number)) {
+                throw new TMSpecError(
+                    'Two instructions for tape №' + tape_number,
+                    {problemValue: val},
+                )
+            }
+            tape_numbers.push(tape_number)
             if (tape[2] !== '')
-                instruction.move[tape_number] = tape[2]
+                move[tape_number] = tape[2]
             if (tape[3] !== '')
-                instruction.write[tape_number] = tape[3]
+                write[tape_number] = tape[3]
         }
-        return instruction
+        return makeInstruction(write, move.join(''), state)
     } else {
         if (val === 'L') {
-            return moveLeft
+            return {move: 'L'}
         } else if (val === 'R') {
-            return moveRight
+            return {move: 'R'}
         }
         // note: this order prevents overriding L/R in synonyms, as that would
         // allow inconsistent notation, e.g. 'R' and {R: ..} being different.
@@ -419,10 +435,10 @@ function parseInstructionObject(val) {
         )
     }
     if ('L' in val) {
-        move = TM.MoveHead.left
+        move = 'L'
         state = val.L
     } else if ('R' in val) {
-        move = TM.MoveHead.right
+        move = 'R'
         state = val.R
     } else {
         throw new TMSpecError('Missing movement direction')
@@ -431,7 +447,7 @@ function parseInstructionObject(val) {
     if ('write' in val) {
         var writeStr = String(val.write)
         if (writeStr.length === 1) {
-            symbol = writeStr
+            symbol = [writeStr]
         } else {
             throw new TMSpecError('Write requires a string of length 1')
         }

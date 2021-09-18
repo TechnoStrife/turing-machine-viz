@@ -1,6 +1,6 @@
-'use strict';
+'use strict'
 
-var _ = require('lodash');
+var _ = require('lodash')
 
 
 /* Interface
@@ -33,80 +33,89 @@ var _ = require('lodash');
  */
 // TransitionTable -> DiagramGraph
 function deriveGraph(table) {
-  // We need two passes, since edges may point at vertices yet to be created.
-  // 1. Create all the vertices.
-  var graph = _.mapValues(table, function (transitions, state) {
-    return {
-      label: state,
-      transitions: transitions
-    };
-  });
-  // 2. Create the edges, which can now point at any vertex object.
-  var allEdges = [];
-  _.forEach(graph, function (vertex, state) {
+    // We need two passes, since edges may point at vertices yet to be created.
+    // 1. Create all the vertices.
+    var graph = _.mapValues(table, function (transitions, state) {
+        return {
+            label: state,
+            transitions: transitions,
+        }
+    })
+    // 2. Create the edges, which can now point at any vertex object.
+    var allEdges = []
+    _.forEach(graph, function (vertex, state) {
 
-    vertex.transitions = vertex.transitions && (function () {
-      var stateTransitions = {};
+        vertex.transitions = vertex.transitions && (function () {
+            let stateTransitions = {}
 
-      // Combine edges with the same source and target
-      var cache = {};
-      function edgeTo(target, label) {
-        var edge = cache[target] ||
-          _.tap(cache[target] = {
-            source: vertex,
-            target: graph[target],
-            labels: []
-          }, allEdges.push.bind(allEdges));
-        edge.labels.push(label);
-        return edge;
-      }
-      // Create symbol -> instruction object map
-      _.forEach(vertex.transitions, function (instruct, symbolKey) {
-        // Handle comma-separated symbols.
-        // Recreate array by splitting on ','. Treat 2 consecutive ',' as , ','.
-        var symbols = symbolKey.split(',').reduce(function (acc, x) {
-          if (x === '' && acc[acc.length-1] === '') {
-            acc[acc.length-1] = ',';
-          } else {
-            acc.push(x);
-          }
-          return acc;
-        }, []);
-        var target = instruct.state != null ? instruct.state : state;
-        var edge = edgeTo(target, labelFor(symbols, instruct));
+            // Combine edges with the same source and target
+            let cache = {}
 
-        symbols.forEach(function (symbol) {
-          stateTransitions[symbol] = {
-            // Normalize for execution, but display the less-cluttered original.
-            instruction: normalize(state, symbol, instruct),
-            edge: edge
-          };
-        });
-      });
+            function edgeTo(target, label) {
+                let edge = cache[target] ||
+                    _.tap(cache[target] = { // WHAT THE FUCK?
+                        source: vertex,
+                        target: graph[target],
+                        labels: [],
+                    }, allEdges.push.bind(allEdges))
+                edge.labels.push(label)
+                return edge
+            }
 
-      return stateTransitions;
-    }());
+            // Create symbol -> instruction object map
+            _.forEach(vertex.transitions, function (instruct, symbolKey) {
+                // Handle comma-separated symbols.
+                // Recreate array by splitting on ','. Treat 2 consecutive ',' as , ','.
+                let symbols = symbolKey.split(',').reduce(function (acc, x) {
+                    if (x === '' && acc[acc.length - 1] === '') {
+                        acc[acc.length - 1] = ','
+                    } else {
+                        acc.push(x)
+                    }
+                    return acc
+                }, [])
+                let target = instruct.state != null ? instruct.state : state
+                let edge = edgeTo(target, labelFor(symbols, instruct))
 
-  });
+                symbols.forEach(function (symbol) {
+                    stateTransitions[symbol] = {
+                        // Normalize for execution, but display the less-cluttered original.
+                        instruction: normalize(state, symbol, instruct),
+                        edge: edge,
+                    }
+                })
+            })
 
-  return {graph: graph, edges: allEdges};
+            return stateTransitions
+        }())
+
+    })
+
+    return {graph: graph, edges: allEdges}
 }
 
 // Normalize an instruction to include an explicit state and symbol.
 // e.g. {symbol: '1'} normalizes to {state: 'q0', symbol: '1'} when in state q0.
 function normalize(state, symbol, instruction) {
-  return _.defaults({}, instruction, {state: state, symbol: symbol});
+    symbol = symbol.split('')
+    if (instruction.symbol) {
+        for (let i = 0; i < symbol.length; i++) {
+            if (instruction.symbol[i])
+                symbol[i] = instruction.symbol[i]
+        }
+    }
+    return _.defaults({symbol: symbol.join('')}, instruction, {state: state})
 }
 
 function labelFor(symbols, action) {
-  var rightSide = ((action.symbol == null) ? '' : (visibleSpace(String(action.symbol)) + ','))
-    + String(action.move);
-  return symbols.map(visibleSpace).join(',') + '→' + rightSide;
+    var rightSide = ((action.symbol == null) ? '' : (visibleSpace(String(action.symbol)) + ','))
+        + String(action.move)
+    return symbols.map(visibleSpace).join(',') + '→' + rightSide
 }
 
 // replace ' ' with '␣'.
 function visibleSpace(c) {
-  return (c === ' ') ? '␣' : c;
+    return (c === ' ') ? '␣' : c
 }
 
 
@@ -118,11 +127,11 @@ function visibleSpace(c) {
  * @param {TransitionTable} table
  */
 function StateGraph(table) {
-  var derived = deriveGraph(table);
-  Object.defineProperties(this, {
-    __graph: { value: derived.graph },
-    __edges: { value: derived.edges }
-  });
+    var derived = deriveGraph(table)
+    Object.defineProperties(this, {
+        __graph: {value: derived.graph},
+        __edges: {value: derived.edges},
+    })
 }
 
 /**
@@ -137,31 +146,31 @@ function StateGraph(table) {
  * @return { {[state: string]: Object} }
  */
 StateGraph.prototype.getVertexMap = function () {
-  return this.__graph;
-};
+    return this.__graph
+}
 
 /**
  * D3 layout "links".
  */
 StateGraph.prototype.getEdges = function () {
-  return this.__edges;
-};
+    return this.__edges
+}
 
 /**
  * Look up a state's corresponding D3 "node".
  */
 StateGraph.prototype.getVertex = function (state) {
-  return this.__graph[state];
-};
+    return this.__graph[state]
+}
 
 StateGraph.prototype.getInstructionAndEdge = function (state, symbol) {
-  var vertex = this.__graph[state];
-  if (vertex === undefined) {
-    throw new Error('not a valid state: ' + String(state));
-  }
+    var vertex = this.__graph[state]
+    if (vertex === undefined) {
+        throw new Error('not a valid state: ' + String(state))
+    }
 
-  return vertex.transitions && vertex.transitions[symbol];
-};
+    return vertex.transitions && vertex.transitions[symbol]
+}
 
 
-module.exports = StateGraph;
+module.exports = StateGraph
