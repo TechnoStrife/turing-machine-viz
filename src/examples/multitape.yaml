@@ -1,0 +1,24 @@
+name: multitape
+source code: |
+  # Adds 1 to a binary number. Prints which bits changed on the second tape
+  input:
+    - '1011'
+    - '0000'
+  tapes: 2
+  blank: ' '
+  start state: right
+  table:
+    # scan to the rightmost digit
+    right:
+      10,00: 1R 2R
+      '  ' : carry 1L 2L
+    # then carry the 1
+    carry:
+      10      : 1L0 2L1
+      '00,  ' : done 1L1 2L1
+    done:
+
+positions:
+  right: {x: 230, y: 250}
+  carry: {x: 400, y: 250}
+  done: {x: 570, y: 250}

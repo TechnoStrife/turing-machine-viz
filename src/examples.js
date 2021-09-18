@@ -9,6 +9,7 @@ function requireExample(name) {
 }
 
 var examplePairs = [
+  'multitape',
   'repeat01',
   'binaryIncrement',
   'divisibleBy3',
@@ -23,7 +24,7 @@ var examplePairs = [
   'lengthMult',
   'binaryAdd',
   'unaryMult',
-  'binaryMult'
+  'binaryMult',
 ].map(function (id) {
   // parse each string into a document
   var doc = parseDocument(requireExample(id));
@@ -48,5 +49,5 @@ var list = examplePairs.map(function (pair) { return pair[1]; });
 exports.hasID = isExampleID;
 exports.get = get;
 exports.list = list;
-exports.firsttimeDocID = 'binaryIncrement';
+exports.firsttimeDocID = 'multitape';
 exports.blankTemplate = requireExample('_template');
