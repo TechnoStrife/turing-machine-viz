@@ -54,7 +54,7 @@ function move(tape, direction) {
     default: throw new TypeError('not a valid tape movement: ' + String(direction));
   }
 }
-var MoveHead = Object.freeze({
+const MoveHead = Object.freeze({
   left:  {toString: function () { return 'L'; } },
   right: {toString: function () { return 'R'; } }
 });

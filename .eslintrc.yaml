@@ -3,19 +3,20 @@ rules:
   ## Stylistic ##
   indent:
     - 1
-    - 2
+    - 4
     - SwitchCase: 1
       VariableDeclarator:
         var: 2
-  quotes:
-    - 1
-    - single
   linebreak-style:
     - 2
     - unix
   semi:
     - 1
-    - always
+    - never
+    - beforeStatementContinuationChars: always
+  comma-dangle:
+    - error
+    - always-multiline
   space-before-function-paren:
     - 1
     - anonymous: always
@@ -30,9 +31,14 @@ rules:
     - builtinGlobals: true
   no-shadow-restricted-names: 2
   no-unexpected-multiline: 2
+  no-unused-vars:
+    - 2
+    - args: none
   strict:
     - 2
     - global
 env:
+  es6: true
+  es2017: true
   commonjs: true
 extends: eslint:recommended
