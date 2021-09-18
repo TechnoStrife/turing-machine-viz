@@ -164,7 +164,9 @@ TMViz.prototype.reset = function () {
     this.isRunning = false
     this.isHalted = false
     this.machine.state = this.__spec.startState
-    this.machine.tapes.domNode.remove()
+    for (const tape of this.machine.tapes) {
+        tape.domNode.remove()
+    }
     this.machine.tapes = addTapes(this.__parentDiv, this.__spec)
 }
 

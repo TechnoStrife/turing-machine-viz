@@ -1,10 +1,5 @@
 name: universal turing machine code
 source code: |
-  # Adds two binary numbers together.
-
-  # Format: Given input a+b where a and b are binary numbers,
-  # leaves c b on the tape, where c = a+b.
-  # Example: '11+1' => '100 1'.
   input:
     - '>1211223122112223122211123'
       # λ A 0 B R
