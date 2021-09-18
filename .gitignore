@@ -1,6 +1,7 @@
 *.log
 node_modules/
 .eslintcache
-
+package-lock.json
+.idea/
 
 /build/

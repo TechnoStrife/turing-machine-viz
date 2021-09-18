@@ -66,7 +66,6 @@ const commonConfig = {
         'lodash': 'lodash',
         'lodash/fp': '_',
     },
-    devtool: 'inline-source-map',
     plugins: [
         new WriteFilePlugin(),
     ],
@@ -100,6 +99,7 @@ const commonConfig = {
 
 const devConfig = {
     output: {pathinfo: true},
+    devtool: 'inline-source-map',
 }
 
 const prodConfig = {
