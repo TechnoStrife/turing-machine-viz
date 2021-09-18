@@ -116,9 +116,7 @@ function parseSpec(str, allowTapes = false) {
         throw new TMSpecError('The blank symbol must be a string of length 1', detailsForBlank)
     }
 
-    if (allowTapes) {
-        if (obj.tapes === undefined)
-            obj.tapes = 1
+    if (allowTapes && obj.tapes !== undefined) {
         if (!Number.isInteger(obj.tapes)) {
             throw new TMSpecError(
                 'The number of tapes must be an integer',
