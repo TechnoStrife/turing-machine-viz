@@ -1,6 +1,10 @@
 #!/bin/bash
 # Updates the 'gh-pages' branch.
 
+if grep -q Microsoft /proc/version; then
+  alias npm="cmd.exe /C npm"
+fi
+
 set -o errexit -o nounset
 
 
@@ -23,7 +27,7 @@ trap restore EXIT
 
 # Generate and copy over
 npm run prod
-cp index.html CNAME gh-pages/
+cp index.html gh-pages/ # CNAME
 cp -r build gh-pages/
 
 # Commit

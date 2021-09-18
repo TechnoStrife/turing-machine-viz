@@ -89,7 +89,7 @@ Object.defineProperty(TMSpecError.prototype, 'message', {
  *          (eg. no start state, transitioning to an undefined state)
  * @param {string} str
  * @param {boolean} allowTapes
- * @returns {{startState}|*}
+ * @returns {TMSpec}
  */
 function parseSpec(str, allowTapes = false) {
     /** @type {TMSpec|null} obj */
@@ -334,7 +334,7 @@ function parseInstructionString(synonyms, val, tapes) {
         if (synonyms && synonyms[val]) {
             return synonyms[val]
         }
-        let state = val.match(/^([a-zA-Z]\w+)?( |$)/)
+        let state = val.match(/^([^\d]\w+)?( |$)/)
         let move = Array(tapes).fill('H')
         let write = Array(tapes)
         if (state != null) {

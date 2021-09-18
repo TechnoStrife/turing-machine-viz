@@ -164,8 +164,8 @@ TMViz.prototype.reset = function () {
     this.isRunning = false
     this.isHalted = false
     this.machine.state = this.__spec.startState
-    this.machine.tape.domNode.remove()
-    this.machine.tape = addTapes(this.__parentDiv, this.__spec)
+    this.machine.tapes.domNode.remove()
+    this.machine.tapes = addTapes(this.__parentDiv, this.__spec)
 }
 
 Object.defineProperty(TMViz.prototype, 'positionTable', {

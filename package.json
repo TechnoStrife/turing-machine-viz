@@ -11,11 +11,10 @@
     "depgraph": "mkdir -p build/ && (cd src/ && madge . --dot) > build/depgraph.gv",
     "depgraph-noext": "mkdir -p build/ && (cd src/ && madge . --dot -x \"`node -e \"console.log(Object.keys(require('../webpack.config').externals).map(s => '^'+s+'$').join('|'))\"`\") > build/depgraph-noext.gv",
     "lint": "eslint --cache webpack.config.js src/",
-    "prod": "export NODE_ENV=production; npm run lint && webpack --progress --colors --display-error-details",
+    "prod": "cross-env NODE_ENV=production webpack --progress --colors --display-error-details",
     "start": "webpack-dev-server --progress --host=0.0.0.0",
     "watch": "webpack --watch --progress"
   },
-  "dependencies": {},
   "devDependencies": {
     "eslint": "^7.32.0",
     "espree": "^9.0.0",
@@ -24,6 +23,7 @@
     "webpack": "^4.28.2",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0",
-    "write-file-webpack-plugin": "^4.5.1"
+    "write-file-webpack-plugin": "^4.5.1",
+    "cross-env": "^7.0.3"
   }
 }
