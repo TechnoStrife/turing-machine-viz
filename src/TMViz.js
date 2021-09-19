@@ -37,15 +37,18 @@ function animatedTransition(graph, animationCallback) {
 /**
  * Default edge animation callback.
  * @param  {{domNode: Node}} edge
+ * @param  {number} duration of animation
  * @return {D3Transition} The animation. Use this for transition chaining.
  */
-function pulseEdge(edge) {
-    var edgepath = d3.select(edge.domNode)
+function pulseEdge(edge, duration=250) {
+    let edgepath = d3.select(edge.domNode)
     return edgepath
         .classed('active-edge', true)
         .transition()
+        .duration(duration / 2)
         .style('stroke-width', '3px')
         .transition()
+        .duration(duration / 2)
         .style('stroke-width', '1px')
         .transition()
         .duration(0)
@@ -91,18 +94,19 @@ function TMViz(div, spec, posTable) {
     }
 
     this.edgeAnimation = pulseEdge
-    this.stepInterval = 100
+    this.stepInterval = 50
+    this.animationDuration = 250
 
     const self = this
 
     // We hook into the animation callback to know when to start the next step (when running).
     function animateAndContinue(edge) {
-        let transition = self.edgeAnimation(edge)
+        let transition = self.edgeAnimation(edge, self.animationDuration)
         if (self.isRunning) {
             transition.transition().duration(self.stepInterval).each('end', function () {
                 // stop if machine was paused during the animation
                 if (self.isRunning) {
-                    self.step()
+                    self.step(self.animationDuration)
                 }
             })
         }
@@ -150,8 +154,8 @@ function TMViz(div, spec, posTable) {
 /**
  * Step the machine immediately and interrupt any animations.
  */
-TMViz.prototype.step = function () {
-    if (!this.machine.step()) {
+TMViz.prototype.step = function (duration) {
+    if (!this.machine.step(duration)) {
         this.isRunning = false
         this.isHalted = true
     }

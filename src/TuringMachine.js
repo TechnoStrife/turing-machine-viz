@@ -24,14 +24,14 @@ TuringMachine.prototype.toString = function () {
  * @return {boolean} true if successful (the transition is defined),
  *   false otherwise (machine halted)
  */
-TuringMachine.prototype.step = function () {
+TuringMachine.prototype.step = function (duration) {
     let instruct = this.nextInstruction
     if (instruct == null) {
         return false
     }
     for (let i = 0; i < this.tapes.length; i++) {
         this.tapes[i].write(instruct.symbol[i])
-        move(this.tapes[i], instruct.move[i])
+        move(this.tapes[i], instruct.move[i], duration)
     }
     this.state = instruct.state
 
@@ -55,13 +55,13 @@ Object.defineProperties(TuringMachine.prototype, {
 })
 
 // Allows for both notational conventions of moving the head or moving the tape
-function move(tape, direction) {
+function move(tape, direction, duration) {
     switch (direction) {
         case 'R':
-            tape.headRight()
+            tape.headRight(duration)
             break
         case 'L':
-            tape.headLeft()
+            tape.headLeft(duration)
             break
         case 'H':
             break

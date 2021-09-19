@@ -33,4 +33,4 @@ cp -r build gh-pages/
 # Commit
 echo Press enter to begin commit.; read
 git --work-tree=./gh-pages add .
-git --work-tree=./gh-pages commit -v -m 'Update gh-pages' --edit
+git --work-tree=./gh-pages commit -v -m 'Update gh-pages'
