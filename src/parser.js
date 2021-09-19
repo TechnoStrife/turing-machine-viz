@@ -377,7 +377,7 @@ function parseInstructionString(synonyms, val, tapes) {
             if (tape[2] !== '')
                 move[tape_number] = tape[2]
             if (tape[3] !== '')
-                write[tape_number] = tape[3]
+                write[tape_number] = tape[3] === '_' ? ' ' : tape[3]
         }
         return makeInstruction(write, move.join(''), state)
     } else {

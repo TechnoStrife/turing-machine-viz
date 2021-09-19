@@ -58,7 +58,8 @@ function deriveGraph(table) {
                         target: graph[target],
                         labels: [],
                     }, allEdges.push.bind(allEdges))
-                edge.labels.push(label)
+                if (table.tapes < 3)
+                    edge.labels.push(label)
                 return edge
             }
 
