@@ -88,7 +88,7 @@ TapeViz.prototype = Object.create(Tape.prototype)
 TapeViz.prototype.constructor = TapeViz
 
 // IDEA: chain headLeft/Right to wait for write()?
-TapeViz.prototype.write = function (symbol) {
+TapeViz.prototype.write = function (symbol, duration=250) {
     // don't animate if symbol stays the same
     if (Tape.prototype.read.call(this) === symbol) {
         return
@@ -104,9 +104,11 @@ TapeViz.prototype.write = function (symbol) {
         .attr('fill-opacity', '1')
         .attr('stroke-opacity', '1')
         .transition()
+        .duration(duration / 2)
         .attr('fill-opacity', '0.4')
         .attr('stroke-opacity', '0.1')
         .transition()
+        .duration(duration / 2)
         .text(function (d) {
             return d
         })

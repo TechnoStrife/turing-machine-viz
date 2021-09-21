@@ -60,6 +60,9 @@ function pulseEdge(edge, duration=250) {
 }
 
 function addTapes(div, spec) {
+    if (spec.tapes === 0 && typeof spec.input === 'string') {
+        spec.input = [spec.input]
+    }
     let number = spec.tapes === 0 ? 1 : spec.tapes
     let tapes = []
     for (let i = 0; i < number; i++) {
@@ -95,7 +98,7 @@ function TMViz(div, spec, posTable) {
 
     this.edgeAnimation = pulseEdge
     this.stepInterval = 50
-    this.animationDuration = 250
+    this.animationDuration = 500
 
     const self = this
 

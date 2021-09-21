@@ -26,6 +26,16 @@ function TMSimulator(container, buttons) {
         .addEventListener('click', function () {
             self.machine.isRunning = !self.machine.isRunning
         })
+    buttons.speed
+        .addEventListener('click', function () {
+            if (!self.machine)
+                return
+            const speeds = [1000, 500, 500/1.5, 500/2, 500/3]
+            let i = speeds.indexOf(self.machine.animationDuration)
+            i = (i + 1) % speeds.length
+            let speed = self.machine.animationDuration = speeds[i]
+            buttons.speed.lastChild.textContent = `x${500/speed}`
+        })
     buttons.reset
         .addEventListener('click', function () {
             self.machine.reset()
