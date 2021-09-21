@@ -30,7 +30,7 @@ TuringMachine.prototype.step = function (duration) {
         return false
     }
     for (let i = 0; i < this.tapes.length; i++) {
-        this.tapes[i].write(instruct.symbol[i])
+        this.tapes[i].write(instruct.symbol[i], duration)
         move(this.tapes[i], instruct.move[i], duration)
     }
     this.state = instruct.state

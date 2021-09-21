@@ -134,6 +134,10 @@ Create and share your own machines using a simple format. Examples and exercises
             text-align: left;
         }
 
+        .tm-speed {
+            min-width: 55px;
+        }
+
         /* Print styles */
         @media print {
             button.btn, hr {
@@ -566,6 +570,12 @@ Create and share your own machines using a simple format. Examples and exercises
                     <button type="button" class="btn btn-default text-center tm-btn-diagram tm-run">
                         <span class="glyphicon glyphicon-play" aria-hidden="true"></span><br>
                         Run
+                    </button>
+                </div>
+                <div class="col-xs-1">
+                    <button type="button" class="btn btn-default text-center tm-btn-diagram tm-speed">
+                        <span class="glyphicon glyphicon-forward" aria-hidden="true"></span><br>
+                        x1
                     </button>
                 </div>
             </div>
