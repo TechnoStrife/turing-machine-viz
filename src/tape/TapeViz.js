@@ -1,10 +1,10 @@
 'use strict'
-var Tape = require('./Tape.js'),
-    d3 = require('d3')
+const Tape = require('./Tape.js')
+const d3 = require('d3')
 require('./tape.css')
 
-var cellWidth = 50
-var cellHeight = 50
+const cellWidth = 50
+const cellHeight = 50
 
 function initTapeCells(selection) {
     selection.attr('class', 'tape-cell')
@@ -40,8 +40,10 @@ function repositionWrapper(wrapper) {
 }
 
 // Tape visualization centered around the tape head.
-function TapeViz(svg, lookaround, blank, input) {
+function TapeViz(svg, lookaround, blank, input, vis) {
     Tape.call(this, blank, input)
+
+    this.vis = vis
 
     Object.defineProperty(this, 'lookaround', {
         value: lookaround,
@@ -86,6 +88,43 @@ function TapeViz(svg, lookaround, blank, input) {
 
 TapeViz.prototype = Object.create(Tape.prototype)
 TapeViz.prototype.constructor = TapeViz
+
+TapeViz.prototype.visualize = function (state, smooth) {
+    let rule = this.vis[state]
+    let all = this.wrapper.selectAll('.wrapper > g')
+    // all.classed('smooth-color', rule && smooth)
+    all.classed('smooth-color', true)
+    all.classed('green', false)
+        .classed('blue', false)
+        .classed('red', false)
+    if (!rule)
+        return
+    let cur = this.wrapper.selectAll('.wrapper > g:not(.exiting)')[0][this.lookaround]
+    let dir = rule.dir === '->' ? 'nextElementSibling' : 'previousElementSibling'
+    let skip = rule.skip ? rule.skip : 0
+    if (rule.mode === 'row') {
+        while (cur) {
+            let symbol = cur.querySelector('text').textContent
+            if (rule.chars.includes(symbol))
+                cur.classList.add(rule.color)
+            else
+                break
+            cur = cur[dir]
+        }
+    } else if (rule.mode === 'find') {
+        while (cur) {
+            let symbol = cur.querySelector('text').textContent
+            cur.classList.add(rule.color)
+            if (rule.chars.includes(symbol)) {
+                if (skip > 0)
+                    skip -= 1
+                else
+                    break
+            }
+            cur = cur[dir]
+        }
+    }
+}
 
 // IDEA: chain headLeft/Right to wait for write()?
 TapeViz.prototype.write = function (symbol, duration=250) {

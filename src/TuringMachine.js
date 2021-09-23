@@ -29,9 +29,13 @@ TuringMachine.prototype.step = function (duration) {
     if (instruct == null) {
         return false
     }
+
     for (let i = 0; i < this.tapes.length; i++) {
         this.tapes[i].write(instruct.symbol[i], duration)
         move(this.tapes[i], instruct.move[i], duration)
+    }
+    for (let i = 0; i < this.tapes.length; i++) {
+        this.tapes[i].visualize(instruct.state, this.state === instruct.state)
     }
     this.state = instruct.state
 

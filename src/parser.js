@@ -1,8 +1,7 @@
 'use strict'
 
-let TM = require('./TuringMachine'),
-    jsyaml = require('js-yaml'),
-    _ = require('lodash')
+const jsyaml = require('js-yaml')
+const _ = require('lodash')
 
 /**
  * Thrown when parsing a string that is valid as YAML but invalid
@@ -73,6 +72,15 @@ Object.defineProperty(TMSpecError.prototype, 'message', {
 /** @typedef {{[key: string]: ?{[key: string]: string} }} TransitionTable */
 
 /**
+ * @typedef {Object} VisSpec
+ * @property {string} mode
+ * @property {string} dir
+ * @property {string} chars
+ * @property {string} color
+ * */
+/** @typedef {Object<Object<VisSpec>>} VisTable */
+
+/**
  * @typedef {Object} TMSpec
  * @property {string} blank
  * @property {int} tapes
@@ -80,6 +88,7 @@ Object.defineProperty(TMSpecError.prototype, 'message', {
  * @property {string} startState
  * @property synonyms
  * @property {TransitionTable} table
+ * @property {VisTable} vis
  */
 
 /**
@@ -147,11 +156,11 @@ function parseSpec(str, allowTapes = false) {
     checkTableType(obj.table) // parseSynonyms assumes a table object
     let synonyms = parseSynonyms(obj.synonyms, obj.table, obj.tapes)
     obj.table = parseTable(synonyms, obj.table, obj.tapes)
+    obj.vis = parseVis(obj.vis, obj.table, obj.tapes)
     // check for references to non-existent states
     if (!(obj.startState in obj.table)) {
         throw new TMSpecError('The start state has to be declared in the transition table')
     }
-
     return obj
 }
 
@@ -244,15 +253,20 @@ function parseTable(synonyms, val, tapes) {
     })
 }
 
-// omits null/undefined properties
-// (?string, direction, ?string) -> {symbol?: string, move: direction, state?: string}
+/**
+ * omits null/undefined properties
+ * @param {?string | Object<string>} symbol
+ * @param {string} move
+ * @param {?string} state
+ * @returns {TMAction}
+ */
 function makeInstruction(symbol, move, state) {
-    return Object.freeze(_.omitBy(
+    return _.omitBy(
         {symbol: symbol, move: move, state: state},
         function (x) {
             return x == null
         },
-    ))
+    )
 }
 
 function checkTarget(table, instruct) {
@@ -276,9 +290,9 @@ function checkTarget(table, instruct) {
  */
 /**
  * @typedef {Object} STTMAction
- * @property {?string} state
- * @property {?string} move
- * @property {?string} write
+ * @property {string} [state]
+ * @property {string}  move
+ * @property {string} [write]
  */
 /** @typedef {STTMAction|MTTMAction} TMAction */
 
@@ -325,7 +339,7 @@ function parseInstruction(synonyms, table, val, tapes) {
  * @param {?SynonymMap} synonyms
  * @param {string} val
  * @param {int} tapes
- * @returns {Readonly<TMAction>}
+ * @returns {TMAction}
  */
 function parseInstructionString(synonyms, val, tapes) {
     if (tapes) {
@@ -404,13 +418,13 @@ function parseInstructionString(synonyms, val, tapes) {
 // type ActionObj = {write?: any, L: ?string} | {write?: any, R: ?string}
 // case: ActionObj
 function parseInstructionObject(val) {
-    var symbol, move, state
+    let symbol, move, state
     if (val == null) {
         throw new TMSpecError('Missing instruction')
     }
     // prevent typos: check for unrecognized keys
     (function () {
-        var badKey
+        let badKey
         if (!Object.keys(val).every(function (key) {
             badKey = key
             return key === 'L' || key === 'R' || key === 'write'
@@ -443,7 +457,7 @@ function parseInstructionObject(val) {
     }
     // write key is optional, but must contain a char value if present
     if ('write' in val) {
-        var writeStr = String(val.write)
+        let writeStr = String(val.write)
         if (writeStr.length === 1) {
             symbol = [writeStr]
         } else {
@@ -451,6 +465,70 @@ function parseInstructionObject(val) {
         }
     }
     return makeInstruction(symbol, move, state)
+}
+
+/**
+ *
+ * @param {VisTable} vis
+ * @param {TransitionTable} table
+ * @param {int} tapes_count
+ * @returns {VisTable}
+ */
+function parseVis(vis, table, tapes_count) {
+    if (tapes_count === 0)
+        tapes_count = 1
+    let res = Array(tapes_count)
+    for (let i = 0; i < tapes_count; i++)
+        res[i] = {}
+    for (const [state, rules] of Object.entries(vis)) {
+        if (!(state in table)) {
+            throw new TMSpecError('Visualization state must be on the state table', {problemValue: state})
+        }
+        for (const [tapes, rule] of Object.entries(rules)) {
+            for (let tape of tapes.split(',')) {
+                tape = parseInt(tape) - 1
+                if (isNaN(tape)) {
+                    throw new TMSpecError('Visualization table requires comma-separated tape'
+                        + ' numbers', {problemValue: tapes, state})
+                }
+                if (tape < 0) {
+                    throw new TMSpecError('Tape numbers start from 1', {problemValue: tapes, state})
+                }
+                if (tape >= tapes_count) {
+                    throw new TMSpecError(
+                        'Tape number is bigger than the number of tapes',
+                        {
+                            problemValue: tapes,
+                            info: `Your machine has only ${tapes} tapes`,
+                        },
+                    )
+                }
+                if (rule.skip && (typeof rule.skip != 'number' || !Number.isInteger(rule.skip))) {
+                    throw new TMSpecError('"skip" must be an integer', {problemValue: rule.skip, state})
+                }
+                assert_in(rule.mode, 'mode', ['row', 'find'], state, tapes)
+                assert_in(rule.dir, 'dir', ['->', '<-'], state, tapes)
+                assert_in(rule.color, 'color', ['green', 'blue', 'red'], state, tapes)
+                rule.chars = String(rule.chars)
+                res[tape][state] = Object.assign({}, rule)
+            }
+        }
+    }
+    return res
+}
+
+function assert_in(val, name, arr, state, tapes) {
+    if (!arr.includes(val)) {
+        throw new TMSpecError(
+            `${name} has incorrect value`,
+            {
+                problemValue: val,
+                state,
+                symbol: tapes,
+                info: 'Possible values are: ' + JSON.stringify(arr),
+            },
+        )
+    }
 }
 
 exports.TMSpecError = TMSpecError
