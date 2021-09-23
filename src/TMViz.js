@@ -72,8 +72,12 @@ function addTapes(div, spec) {
 }
 
 function addTape(div, spec, i) {
-    return new TapeViz(div.append('svg').attr('class', 'tm-tape'), 9,
-        spec.blank, spec.input && spec.input[i] ? String(spec.input[i]).split('') : [],
+    return new TapeViz(
+        div.append('svg').attr('class', 'tm-tape'),
+        9,
+        spec.blank,
+        spec.input && spec.input[i] ? String(spec.input[i]).split('') : [],
+        spec.vis[i],
     )
 }
 
