@@ -310,22 +310,21 @@ TMDocumentController.prototype.showCorruptDiagramAlert = function (show) {
 // Sync from editor to diagram
 TMDocumentController.prototype.loadEditorSource = function () {
     // load to diagram, and report any errors
-    var errors = (function () {
-        try {
-            var isNewDiagram = !this.hasValidDiagram
-            this.simulator.sourceCode = this.editor.getValue()
-            if (isNewDiagram) {
-                // loaded new, or recovery succeeded => close error notice, restore positions
-                this.showCorruptDiagramAlert(false)
-                this.simulator.positionTable = this.getDocument().positionTable
-            }
-            // .toJSON() is the only known way to preserve the cursor/selection(s)
-            // this.__loadedEditorSelection = this.editor.session.selection.toJSON();
-            return []
-        } catch (e) {
-            return [e]
+    var errors = []
+
+    try {
+        var isNewDiagram = !this.hasValidDiagram
+        this.simulator.sourceCode = this.editor.getValue()
+        if (isNewDiagram) {
+            // loaded new, or recovery succeeded => close error notice, restore positions
+            this.showCorruptDiagramAlert(false)
+            this.simulator.positionTable = this.getDocument().positionTable
         }
-    }.call(this))
+        // .toJSON() is the only known way to preserve the cursor/selection(s)
+        // this.__loadedEditorSelection = this.editor.session.selection.toJSON();
+    } catch (e) {
+        errors = [e]
+    }
     this.isSynced = (errors.length === 0)
     this.setAlertErrors(errors)
 }

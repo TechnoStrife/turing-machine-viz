@@ -32,13 +32,14 @@ var _ = require('lodash')
  * e.g. symbol string '0,1,,,I' -> symbols [0,1,',','I'].
  */
 // TransitionTable -> DiagramGraph
-function deriveGraph(table) {
+function deriveGraph(table, color_table) {
     // We need two passes, since edges may point at vertices yet to be created.
     // 1. Create all the vertices.
     var graph = _.mapValues(table, function (transitions, state) {
         return {
             label: state,
             transitions: transitions,
+            color: color_table[state],
         }
     })
     // 2. Create the edges, which can now point at any vertex object.
@@ -127,8 +128,8 @@ function visibleSpace(c) {
  * • Provides mapping of each state to its vertex and each transition to its edge.
  * @param {TransitionTable} table
  */
-function StateGraph(table) {
-    var derived = deriveGraph(table)
+function StateGraph(table, color_table) {
+    var derived = deriveGraph(table, color_table)
     Object.defineProperties(this, {
         __graph: {value: derived.graph},
         __edges: {value: derived.edges},

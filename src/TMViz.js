@@ -90,7 +90,7 @@ function addTape(div, spec, i) {
  */
 function TMViz(div, spec, posTable) {
     div = d3.select(div)
-    let graph = new StateGraph(spec.table)
+    let graph = new StateGraph(spec.table, spec.vis.colors)
     this.stateviz = new StateViz(
         div,
         graph.getVertexMap(),
@@ -100,6 +100,8 @@ function TMViz(div, spec, posTable) {
         this.positionTable = posTable
     }
 
+    this.titles = spec.titles
+    this.info = spec.info
     this.edgeAnimation = pulseEdge
     this.stepInterval = 50
     this.animationDuration = 500
