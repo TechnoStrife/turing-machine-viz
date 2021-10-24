@@ -477,14 +477,30 @@ function parseInstructionObject(val) {
 function parseVis(vis, table, tapes_count) {
     if (tapes_count === 0)
         tapes_count = 1
-    let res = Array(tapes_count)
+    let res = {titles: {}, info: {}, colors: {}}
     for (let i = 0; i < tapes_count; i++)
         res[i] = {}
+    if (!vis)
+        return res
+
     for (const [state, rules] of Object.entries(vis)) {
         if (!(state in table)) {
             throw new TMSpecError('Visualization state must be on the state table', {problemValue: state})
         }
         for (const [tapes, rule] of Object.entries(rules)) {
+            if (tapes === 'title') {
+                res.titles[state] = rule
+                continue
+            }
+            if (tapes === 'info') {
+                res.info[state] = rule
+                continue
+            }
+            if (tapes === 'color') {
+                res.colors[state] = String(rule)
+                continue
+            }
+
             for (let tape of tapes.split(',')) {
                 tape = parseInt(tape) - 1
                 if (isNaN(tape)) {
