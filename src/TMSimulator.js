@@ -71,16 +71,16 @@ Object.defineProperties(TMSimulator.prototype, {
                 this.container.innerHTML = ''
             } else {
                 // parse & check, then set
-                let spec = parseSpec(sourceCode, true)
+                let [spec, overridePosTable] = parseSpec(sourceCode, true)
                 if (this.machine) {
                     // case: update
                     // copy & restore positions, clear & load contents
                     let posTable = this.machine.positionTable
                     this.clear()
-                    this.machine = new TMViz(this.container, spec, posTable)
+                    this.machine = new TMViz(this.container, spec, overridePosTable || posTable)
                 } else {
                     // case: load new
-                    this.machine = new TMViz(this.container, spec)
+                    this.machine = new TMViz(this.container, spec, overridePosTable)
                 }
             }
             this.__sourceCode = sourceCode
