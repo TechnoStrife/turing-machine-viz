@@ -86,7 +86,7 @@ function addTape(div, spec, i) {
  * @constructor
  * @param {HTMLDivElement} div        div to take over and use.
  * @param                  spec       machine specification
- * @param {PositionTable} [posTable]  position table for the state nodes
+ * @param {?PositionTable} [posTable]  position table for the state nodes
  */
 function TMViz(div, spec, posTable) {
     div = d3.select(div)
@@ -96,7 +96,7 @@ function TMViz(div, spec, posTable) {
         graph.getVertexMap(),
         graph.getEdges(),
     )
-    if (posTable !== undefined) {
+    if (posTable !== undefined && posTable !== null) {
         this.positionTable = posTable
     }
 

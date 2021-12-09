@@ -3,6 +3,8 @@
 const jsyaml = require('js-yaml')
 const _ = require('lodash')
 
+const transformations = require('./transformations.js').transformations
+
 /**
  * Thrown when parsing a string that is valid as YAML but invalid
  * as a machine specification.
@@ -86,6 +88,7 @@ Object.defineProperty(TMSpecError.prototype, 'message', {
  * @property {int} tapes
  * @property {string} 'start state'
  * @property {string} startState
+ * @property {string} transform
  * @property synonyms
  * @property {TransitionTable} table
  * @property {VisTable} vis
@@ -98,7 +101,7 @@ Object.defineProperty(TMSpecError.prototype, 'message', {
  *          (eg. no start state, transitioning to an undefined state)
  * @param {string} str
  * @param {boolean} allowTapes
- * @returns {TMSpec}
+ * @returns {[TMSpec, ?PositionTable]}
  */
 function parseSpec(str, allowTapes = false) {
     /** @type {TMSpec|null} obj */
@@ -136,7 +139,7 @@ function parseSpec(str, allowTapes = false) {
             throw new TMSpecError('Why would you need more than 9 tapes?')
         }
     } else {
-        if (obj.tapes !== undefined && obj.tapes !== 1) {
+        if (!(obj.tapes === undefined || obj.tapes === 1)) {
             throw new TMSpecError('This Turing machine has only 1 tape')
         }
         obj.tapes = 0
@@ -161,7 +164,20 @@ function parseSpec(str, allowTapes = false) {
     if (!(obj.startState in obj.table)) {
         throw new TMSpecError('The start state has to be declared in the transition table')
     }
-    return obj
+    let pos_table = null
+    if (obj.transform) {
+        let transform = String(obj.transform)
+        if (transformations[transform] === undefined)
+            throw new TMSpecError(
+                'No such transform',
+                {
+                    problemValue: transform,
+                    info: 'Available transforms are: ' + Object.keys(transformations).join(', '),
+                },
+            );
+        [obj, pos_table] = transformations[transform](obj, parseSpec)
+    }
+    return [obj, pos_table]
 }
 
 function checkTableType(val) {
@@ -423,7 +439,7 @@ function parseInstructionObject(val) {
         throw new TMSpecError('Missing instruction')
     }
     // prevent typos: check for unrecognized keys
-    (function () {
+    {
         let badKey
         if (!Object.keys(val).every(function (key) {
             badKey = key
@@ -438,7 +454,7 @@ function parseInstructionObject(val) {
                 },
             )
         }
-    })()
+    }
     // one L/R key is required, with optional state value
     if ('L' in val && 'R' in val) {
         throw new TMSpecError(
@@ -452,6 +468,9 @@ function parseInstructionObject(val) {
     } else if ('R' in val) {
         move = 'R'
         state = val.R
+    } else if ('H' in val) {
+        move = 'H'
+        state = val.H
     } else {
         throw new TMSpecError('Missing movement direction')
     }
