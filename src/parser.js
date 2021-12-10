@@ -443,7 +443,7 @@ function parseInstructionObject(val) {
         let badKey
         if (!Object.keys(val).every(function (key) {
             badKey = key
-            return key === 'L' || key === 'R' || key === 'write'
+            return key === 'L' || key === 'R' || key === 'H' || key === 'write'
         })) {
             throw new TMSpecError(
                 'Unrecognized key',

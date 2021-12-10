@@ -228,7 +228,7 @@ function StateViz(container, nodes, linkArray) {
     /* eslint-disable no-invalid-this */ // eslint is not familiar with D3
     var w = 800
     var h = 500
-    var linkDistance = 140
+    var linkDistance = 50
     var nodeRadius = 20
 
     var colors = d3.scale.category10()
@@ -284,9 +284,9 @@ function StateViz(container, nodes, linkArray) {
         .links(linkArray)
         .size([w, h])
         .linkDistance([linkDistance])
-        .charge([-500])
+        .charge([-300])
         .theta(0.1)
-        .gravity(0.05)
+        .gravity(0.1)
         .start()
 
     var drag = force.drag()
