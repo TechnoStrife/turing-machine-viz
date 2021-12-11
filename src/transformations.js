@@ -1,6 +1,6 @@
 'use strict'
 
-const {TMSpecError} = require('./parser')
+const {TMSpecError} = require('./errors.js')
 const examples = require('./examples')
 
 
@@ -125,6 +125,11 @@ function shennon2_transform(spec, parseSpec) {
     //     '>': 1,
     // }
     let [symbols, states] = unique_symbols_states(spec)
+
+    if (symbols.length <= 2)
+        throw new TMSpecError("It seems like you have too few symbols to apply Shennon's second"
+            + " theorem")
+
     symbols.sort()
     if (symbols.includes('∂')) {
         symbols.splice(symbols.indexOf('∂'), 1)
@@ -238,13 +243,13 @@ function shennon2_transform(spec, parseSpec) {
             )
             for (let i = size - 1; i > 1; --i) {
                 add(
-                    `${to_state}_${move}_move_${size}`, 0,
-                    `${to_state}_${move}_move_${size-1}`, 0,
+                    `${to_state}_${move}_move_${i}`, 0,
+                    `${to_state}_${move}_move_${i-1}`, 0,
                     'L',
                 )
                 add(
-                    `${to_state}_${move}_move_${size}`, 1,
-                    `${to_state}_${move}_move_${size-1}`, 1,
+                    `${to_state}_${move}_move_${i}`, 1,
+                    `${to_state}_${move}_move_${i-1}`, 1,
                     'L',
                 )
             }
@@ -262,82 +267,18 @@ function shennon2_transform(spec, parseSpec) {
         vis: {titles: {}, info: {}, colors: {}, 0: {}},
     }, null]
 }
-/*
-print("Command format: S.a.a'.R/H/L.S'")
-#  add commands
-while(1):
-    c = input().split('.') # Si.ai.aj'.R/L/H.Sj'
-    #c[0] = condition before
-    #c[2] = symbol after
-    #c[3] = move
-    #c[4] = condition after
-
-    bef = bin(symbols[c[1]])[2:].zfill(s_size)
-    af = bin(symbols[c[2]])[2:].zfill(s_size)
-
-    print(bef, ' ', af)
-
-    #find symbol
-    ncom[f"{c[0]}.{bef[0]}->{bef[0]}.R.{c[0]}_{bef[0]}"] = 0
-    n += 1
-
-    for i in range(1, s_size - 1):
-        ncom[f"{c[0]}_{bef[:i]}.{bef[i]}->{bef[i]}.R.{c[0]}_{bef[:i+1]}"] = 0
-        n += 1
-
-    ncom[f"{c[0]}_{bef[:-1]}.{bef[-1]}->{bef[-1]}.H.{c[0]}_{bef}"] = 0
-    n += 1
-
-    ncom[f"{c[0]}_{bef}.{bef[-1]}->{bef[-1]}.H.{c[4]}_{c[3]}_{af}"] = 0
-    n += 1
-
-    #update symbol
-    for i in range(s_size - 1, 0, -1):
-        ncom[f"{c[4]}_{c[3]}_{af[:i + 1]}.{bef[i]}->{af[i]}.L.{c[4]}_{c[3]}_{af[:i]}"] = 0
-        n += 1
-
-    ncom[f"{c[4]}_{c[3]}_{af[0]}.{bef[0]}->{af[0]}.H.{c[4]}_{c[3]}"] = 0
-    n += 1
-
-    #move to next symbol
-    if(str(c[3]) == 'R'):
-        ncom[f"{c[4]}_{c[3]}.{af[0]}->{af[0]}.H.{c[4]}_{c[3]}_move_{s_size}"] = 0
-        n +=1
-        for i in range(s_size, 1, -1):
-            ncom[f"{c[4]}_{c[3]}_move_{i}.{af[s_size - i]}->{af[s_size - i]}.{c[3]}.{c[4]}_{c[3]}_move_{i - 1}"] = 0
-            n += 1
-
-        ncom[f"{c[4]}_{c[3]}_move_{1}.{af[s_size -1]}->{af[s_size - 1]}.R.{c[4]}"] = 0
-        n += 1
-
-    elif(str(c[3]) == 'H'):
-        ncom[f"{c[4]}_{c[3]}.{af[0]}->{af[0]}.H.{c[4]}"] = 0
-        n +=1
-
-    elif(str(c[3]) == "L"):
-        ncom[f"{c[4]}_{c[3]}.{af[0]}->{af[0]}.H.{c[4]}_{c[3]}_move_{s_size}"] = 0
-        n += 1
-        ncom[f"{c[4]}_{c[3]}_move_{s_size}.{af[0]}->{af[0]}.{c[3]}.{c[4]}_{c[3]}_move_{s_size - 1}"] = 0
-        n += 1
-        for i in range(s_size - 1, 1, -1):
-            ncom[f"{c[4]}_{c[3]}_move_{i}.0->0.{c[3]}.{c[4]}_{c[3]}_move_{i - 1}"] = 0
-            ncom[f"{c[4]}_{c[3]}_move_{i}.1->1.{c[3]}.{c[4]}_{c[3]}_move_{i - 1}"] = 0
-            n += 2
-
-        ncom[f"{c[4]}_{c[3]}_move_{1}.0->0.L.{c[4]}"] = 0
-        ncom[f"{c[4]}_{c[3]}_move_{1}.1->1.L.{c[4]}"] = 0
-        n += 2
 
 
-print(f"Number of commands {len(ncom)}")
-for x in ncom.keys():
-    print(x, end = '\n')
-
- */
+function shennon2_0_transform(spec, parseSpec) {
+    let [res, pos] = shennon2_transform(spec, parseSpec)
+    res.blank = '0'
+    return [res, pos]
+}
 
 
 exports.transformations = {
     'universal': universal_transform,
     'shennon2': shennon2_transform,
+    'shennon2_0': shennon2_0_transform,
 }
 
