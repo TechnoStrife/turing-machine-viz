@@ -31,15 +31,15 @@ function unique_symbols_states(spec) {
 
 /**
  * @param {TMSpec} spec
- * @returns {[TMSpec, PositionTable]}
+ * @returns {[TMSpec, PositionTable, string]}
  */
 function universal_transform(spec, parseSpec) {
     if (spec.tapes !== 0)
         throw new TMSpecError('For universal transform tapes must be 1')
 
-    let {sourceCode: uni, positionTable} = examples.get('universal');
+    let {sourceCode: universal_source, positionTable} = examples.get('universal');
 
-    [uni] = parseSpec(uni, true)
+    let [uni] = parseSpec(universal_source, true)
 
     let [symbols, states] = unique_symbols_states(spec)
     let final_states = []
@@ -80,7 +80,21 @@ function universal_transform(spec, parseSpec) {
         data_tape,
     ]
 
-    return [uni, positionTable]
+    const unary_cmp = (a, b) => a[1].length - b[1].length
+    let max_state_len = Math.max(...Object.keys(states).map(x => x.length))
+    universal_source = universal_source.split('\n')
+    let input_index = universal_source.findIndex(s => s.startsWith('input:'))
+    universal_source.splice(
+        input_index + 1,
+        3,
+        ...uni.input.map(x => `  - '${x}'`),
+        ...Object.entries(symbols).sort(unary_cmp).map(([sym, code]) => `    # ${sym.replace(' ', '␣')} = ${code}\r`),
+        '    #\r',
+        ...Object.entries(states).sort(unary_cmp).map(([state, code]) => `    # ${state.padStart(max_state_len)} = ${code}\r`),
+    )
+    universal_source = universal_source.join('\n')
+
+    return [uni, positionTable, universal_source]
 }
 
 function* flatten_spec(spec) {
@@ -117,7 +131,7 @@ function unary(arr, first, code) {
 
 /**
  * @param {TMSpec} spec
- * @returns {[TMSpec, PositionTable]}
+ * @returns {[TMSpec, PositionTable, string]}
  */
 function shennon2_transform(spec, parseSpec) {
     // let symbols = {
@@ -150,13 +164,16 @@ function shennon2_transform(spec, parseSpec) {
 
     let input = Array.prototype.map.call(spec.input, s => symbols[s]).join('')
 
+    let instructions = []
     let res = {}
 
     function add(from_state, symbol, to_state, write, move) {
         if (res[from_state] === undefined)
             res[from_state] = {}
-        if (res[from_state][symbol] === undefined)
+        if (res[from_state][symbol] === undefined) {
             res[from_state][symbol] = {symbol: write, move: move, state: to_state}
+            instructions.push([from_state, symbol, write, move, to_state])
+        }
         // assume that if res[from_state][symbol] exists, it has the same instructions
     }
 
@@ -256,23 +273,33 @@ function shennon2_transform(spec, parseSpec) {
             add(`${to_state}_${move}_move_1`, 0, `${to_state}`, 0, 'L')
             add(`${to_state}_${move}_move_1`, 1, `${to_state}`, 1, 'L')
         }
+        if (instructions[instructions.length - 1] !== null)
+            instructions.push(null)
     }
 
-    return [{
+    let shennon = {
         input: input,
         tapes: 0,
         blank: ' ',
         startState: spec.startState,
         table: res,
         vis: {titles: {}, info: {}, colors: {}, 0: {}},
-    }, null]
+    }
+
+    const binary_cmp = (a, b) => parseInt(a[1].length, 2) - parseInt(b[1].length, 2)
+    let code = Object.entries(symbols).sort(binary_cmp).map(([sym, c]) => `# ${sym.replace(' ', '␣')} = ${c}\r`).join('\n')
+        + '\r\n'
+    let max_state_len = Math.max(...instructions.map(x => x ? x[0].length : 0))
+    code += instructions.map(x => !x ? '' :`${x[0].padEnd(max_state_len)} ${x[1]} -> ${x[2]} ${x[3]} ${x[4]}`).join('\n')
+
+    return [shennon, null, code]
 }
 
 
 function shennon2_0_transform(spec, parseSpec) {
-    let [res, pos] = shennon2_transform(spec, parseSpec)
+    let [res, pos, code] = shennon2_transform(spec, parseSpec)
     res.blank = '0'
-    return [res, pos]
+    return [res, pos, code]
 }
 
 

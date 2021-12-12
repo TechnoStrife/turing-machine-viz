@@ -1,8 +1,8 @@
 'use strict'
 
-const parseSpec = require('./parser').parseSpec
+const {parseSpec} = require('./parser')
 const TMViz = require('./TMViz')
-const watchInit = require('./watch').watchInit
+const {watchInit} = require('./watch')
 const values = require('lodash').values
 
 /**
@@ -15,6 +15,7 @@ const values = require('lodash').values
 function TMSimulator(container, buttons) {
     this.container = container
     this.buttons = buttons
+    this.transformed_code = null
 
     const self = this
     buttons.step
@@ -71,7 +72,8 @@ Object.defineProperties(TMSimulator.prototype, {
                 this.container.innerHTML = ''
             } else {
                 // parse & check, then set
-                let [spec, overridePosTable] = parseSpec(sourceCode, true)
+                let [spec, overridePosTable, transformed_code] = parseSpec(sourceCode, true)
+                this.transformed_code = transformed_code
                 if (this.machine) {
                     // case: update
                     // copy & restore positions, clear & load contents
