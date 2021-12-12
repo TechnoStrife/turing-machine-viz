@@ -21,6 +21,7 @@ var UndoManager = ace.require('ace/undomanager').UndoManager
  * @param {HTMLDivElement} containers.simulator
  * @param {HTMLDivElement} containers.editorAlerts
  * @param {HTMLDivElement} containers.editor
+ * @param {HTMLDivElement} containers.transformed_code
  * @param {Object} buttons Buttons to use.
  * @param {HTMLButtonElement} buttons.simulator.run
  * @param {HTMLButtonElement} buttons.simulator.step
@@ -47,6 +48,21 @@ function TMDocumentController(containers, buttons, document) {
     // "Automatically scrolling cursor into view after selection change"
     editor.$blockScrolling = Infinity
 
+    var transformed_code = ace.edit(containers.transformed_code)
+    transformed_code.session.setOptions({
+        mode: 'ace/mode/yaml',
+        tabSize: 2,
+        useSoftTabs: true,
+    })
+    transformed_code.setOptions({
+        minLines: 15,
+        maxLines: 50,
+    })
+    // suppress warning about
+    // "Automatically scrolling cursor into view after selection change"
+    transformed_code.$blockScrolling = Infinity
+    transformed_code.setReadOnly(true)
+
     var editorButtons = buttons.editor
     var self = this
     editorButtons.load
@@ -70,6 +86,7 @@ function TMDocumentController(containers, buttons, document) {
         buttons: {value: buttons},
         containers: {value: containers},
         editor: {value: editor, enumerable: true},
+        transformed_code: {value: transformed_code, enumerable: true},
     })
     this.openDocument(document)
 }
@@ -319,6 +336,13 @@ TMDocumentController.prototype.loadEditorSource = function () {
             // loaded new, or recovery succeeded => close error notice, restore positions
             this.showCorruptDiagramAlert(false)
             this.simulator.positionTable = this.getDocument().positionTable
+        }
+
+        if (this.simulator.transformed_code === null) {
+            this.transformed_code.container.classList.add('hidden')
+        } else {
+            this.transformed_code.container.classList.remove('hidden')
+            this.transformed_code.setValue(this.simulator.transformed_code, -1 /* put cursor at start */)
         }
         // .toJSON() is the only known way to preserve the cursor/selection(s)
         // this.__loadedEditorSelection = this.editor.session.selection.toJSON();

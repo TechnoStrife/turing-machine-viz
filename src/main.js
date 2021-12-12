@@ -309,6 +309,7 @@ var controller = (function () {
         simulator: document.getElementById('machine-container'),
         editorAlerts: document.getElementById('editor-alerts-container'),
         editor: editor,
+        transformed_code: document.getElementById('transformed-code-container'),
     }, {
         simulator: {
             run: getButton(sim, 'run'),

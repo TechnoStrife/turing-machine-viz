@@ -3,7 +3,7 @@
 const jsyaml = require('js-yaml')
 const _ = require('lodash')
 const {TMSpecError} = require('./errors.js')
-const transformations = require('./transformations.js').transformations
+const {transformations} = require('./transformations.js')
 
 
 
@@ -101,6 +101,7 @@ function parseSpec(str, allowTapes = false) {
         throw new TMSpecError('The start state has to be declared in the transition table')
     }
     let pos_table = null
+    let transformed_code = null
     if (obj.transform) {
         let transform = String(obj.transform)
         if (transformations[transform] === undefined)
@@ -111,9 +112,9 @@ function parseSpec(str, allowTapes = false) {
                     info: 'Available transforms are: ' + Object.keys(transformations).join(', '),
                 },
             );
-        [obj, pos_table] = transformations[transform](obj, parseSpec)
+        [obj, pos_table, transformed_code] = transformations[transform](obj, parseSpec)
     }
-    return [obj, pos_table]
+    return [obj, pos_table, transformed_code]
 }
 
 function checkTableType(val) {
