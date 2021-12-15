@@ -5,7 +5,6 @@ const examples = require('./examples')
 
 
 function unique_symbols_states(spec) {
-
     let symbols = []
     let states = []
     for (const from_state in spec.table) {
@@ -37,6 +36,8 @@ function universal_transform(spec, parseSpec) {
     if (spec.tapes !== 0)
         throw new TMSpecError('For universal transform tapes must be 1')
 
+    const space = x => x.replace(' ', '⎵')
+
     let {sourceCode: universal_source, positionTable} = examples.get('universal');
 
     let [uni] = parseSpec(universal_source, true)
@@ -53,6 +54,9 @@ function universal_transform(spec, parseSpec) {
     states = unary(states, spec.startState, '2')
     let move = {'R': '3', 'L': '33', 'H': '333', null: '333', undefined: '333'}
 
+    let raw_instructions = []
+    let encoded_instructions = []
+
     let instructions = '>'
     let state_tape = '>' + states[spec.startState]
     let data_tape
@@ -60,14 +64,17 @@ function universal_transform(spec, parseSpec) {
     for (const from_state in spec.table) {
         for (const [comma_symbols, action] of Object.entries(spec.table[from_state] || {})) {
             for (const symbol of parseSymbolKey(comma_symbols)) {
-                instructions += symbols[symbol]
-                instructions += states[from_state]
-                instructions += symbols[action.symbol && action.symbol[0] || symbol]
-                instructions += states[action.state || from_state]
-                if (final_states.includes(action.state))
-                    instructions += '3333'
-                else
-                    instructions += move[action.move]
+                let new_symbol = action.symbol && action.symbol[0] || symbol
+                let new_state = action.state || from_state
+                raw_instructions.push([symbol, from_state, new_symbol, new_state, action.move])
+                encoded_instructions.push([
+                    symbols[symbol],
+                    states[from_state],
+                    symbols[new_symbol],
+                    states[new_state],
+                    final_states.includes(action.state) ? '3333' : move[action.move],
+                ])
+                instructions += encoded_instructions[encoded_instructions.length - 1].join('')
             }
         }
     }
@@ -80,6 +87,13 @@ function universal_transform(spec, parseSpec) {
         data_tape,
     ]
 
+    raw_instructions = raw_instructions.map(row => row.map(space))
+    encoded_instructions = encoded_instructions.map(row => row.map(space))
+    raw_instructions = pad_table(raw_instructions)
+    encoded_instructions = pad_table(encoded_instructions)
+    raw_instructions = raw_instructions.map(x => '    # ' + x.join(' '))
+    encoded_instructions = encoded_instructions.map(x => '    # ' + x.join(' '))
+
     const unary_cmp = (a, b) => a[1].length - b[1].length
     let max_state_len = Math.max(...Object.keys(states).map(x => x.length))
     universal_source = universal_source.split('\n')
@@ -88,13 +102,23 @@ function universal_transform(spec, parseSpec) {
         input_index + 1,
         3,
         ...uni.input.map(x => `  - '${x}'`),
-        ...Object.entries(symbols).sort(unary_cmp).map(([sym, code]) => `    # ${sym.replace(' ', '␣')} = ${code}\r`),
+        ...Object.entries(symbols).sort(unary_cmp).map(([sym, code]) => `    # ${space(sym)} = ${code}\r`),
         '    #\r',
         ...Object.entries(states).sort(unary_cmp).map(([state, code]) => `    # ${state.padStart(max_state_len)} = ${code}\r`),
+        '    #\r',
+        ...raw_instructions,
+        ...encoded_instructions,
     )
     universal_source = universal_source.join('\n')
 
     return [uni, positionTable, universal_source]
+}
+
+function pad_table(table, fill=' ') {
+    let max_lengths = table[0].map((_, i) => Math.max(...table.map(row => row[i].length)))
+    return table.map(
+        row => row.map((x, i) => x.padEnd(max_lengths[i], fill)),
+    )
 }
 
 function* flatten_spec(spec) {
