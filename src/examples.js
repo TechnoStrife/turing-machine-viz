@@ -11,6 +11,7 @@ function requireExample(name) {
 var examplePairs = [
     'universal',
     'multitape',
+    'shennon1',
     'repeat01',
     'binaryIncrement',
     'divisibleBy3',
