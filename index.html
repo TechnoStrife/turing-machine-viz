@@ -826,6 +826,22 @@ Create and share your own machines using a simple format. Examples and exercises
                 see the excellent <a href="http://plato.stanford.edu/entries/turing-machine" target="_blank">entry in
                 the Stanford Encyclopedia of Philosophy</a>.
             </p>
+
+            <section>
+                <h4>Turing machine transformations</h4>
+                <p>Currently implemented transformations:</p>
+                <ul>
+                    <li>
+                        to universal TM that can interpret any other TM (<code>universal</code>)<br>
+                        <i>Unoptimized 3-tape version for demonstration purposes</i>
+                    </li>
+                    <li>
+                        Shennon's second theorem (<code>shennon2</code> or <code>shennon2_0</code>).
+                    </li>
+                </ul>
+                To apply a transformation you need to add <code>transform: <var>name</var></code>
+                to the top of the specification
+            </section>
         </section>
 
 
@@ -885,6 +901,41 @@ table:
                     It writes back the same symbol and stays in the same state.
                 </li>
             </ul>
+            <h4>Multitape Turing machine</h4>
+            <p>To turn the machine into a multitape machine you need to add <code>tapes: <var>N</var></code>
+                at the top of the specification. Then you need to turn <code>input:</code>
+                into a list like this (e.g. if you set tapes to 2):</p>
+            <pre>
+input:
+  - '1011'
+  - '0000'</pre>
+            Instruction syntax changes:
+            <ul>
+                <li>
+                    Each instruction now takes several symbols, each matching the respective tape.
+                    To execute the same instruction for different symbols, you can join lists of symbols with comma:
+                    <code>10,00</code> or <code>aba,abb,aab,aaa</code>
+                </li>
+                <li>
+                    If you want to change the state after the instruction, you need to place the name of the new state
+                    before the instruction
+                </li>
+                <li>
+                    Commands for each tape have the following format:
+                    <code>nMs</code>, where <code>n</code> is an index of a tape,
+                    <code>M</code> is a move direction (one of R, L, or H),
+                    <code>s</code> is a symbol that should be written on this tape.
+                </li>
+                <li>Commands for each tape should be separated by a space.
+                    If you don't want to do anything on a specific tape, you may omit its command</li>
+                <li>If you don't want to overwrite the symbol on a given tape, it may be omitted</li>
+            </ul>
+            Examples:
+            <pre>
+101,001: 1R 2R 3H0
+100: 2R 3R1
+111: new_state 2L 3L</pre>
+
         </section>
 
 
