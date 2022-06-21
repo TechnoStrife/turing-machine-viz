@@ -1,6 +1,10 @@
-# [turingmachine.io](http://turingmachine.io)
+# [https://technostrife.github.io/turing-machine-viz/](technostrife.github.io/turing-machine-viz)
 
 This is a [Turing machine] visualizer designed for learning through visual thinking and creative exploration.
+
+My modifications allow you to run multitape TMs. It, in turn allows you to run a 3-tape universal TM and demostrate how Shannon's transformations work. 
+
+You can also write code for a regular TM and transform it for a universal TM or transform according to the Shannon's theorem to explore how they works.
 
 Machines are described in a simple YAML-based format.
 As you code, each save updates the state diagram; this offers the speed and directness of code, combined with the visual intuitiveness of a graphical editor.
