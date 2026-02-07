@@ -1,4 +1,4 @@
-# [https://technostrife.github.io/turing-machine-viz/](technostrife.github.io/turing-machine-viz)
+# [Online visualization](https://technostrife.github.io/turing-machine-viz/)
 
 This is a [Turing machine] visualizer designed for learning through visual thinking and creative exploration.
 
